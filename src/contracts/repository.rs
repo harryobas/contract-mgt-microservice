@@ -2,30 +2,31 @@
 
 use diesel;
 use diesel::prelude::*;
-use schema::contracts;
-use contracts::Contract;
+use crate::schema::contracts;
+use crate::contracts::Contract;
+
 
 pub fn all(conn: &SqliteConnection) -> QueryResult<Vec<Contract>> {
-    contracts::table.load::<Contract>(&*conn)
+    contracts::table.load::<Contract>(conn)
 }
 
 pub fn get(id: i32, conn: &SqliteConnection) -> QueryResult<Contract> {
     contracts::table.find(id).get_result::<Contract>(conn)
 }
 
-pub fn insert(contract: Contract, conn: &SqliteConnection) -> QueryResult<Contract> {
+pub fn insert(contract: Contract, conn: &SqliteConnection) -> QueryResult<usize> {
     diesel::insert_into(contracts::table)
         .values(&InsertableContract::from_contract(contract))
-        .get_result(conn)
+        .execute(conn)
 }
 
-pub fn update(id: i32, contract: Contract, conn: &SqliteConnection) -> QueryResult<Contract>{
+pub fn update(id: i32, contract: Contract, conn: &SqliteConnection) -> QueryResult<usize>{
     diesel::update(contracts::table.find(id))
         .set(&contract)
-        .get_result(conn)
+        .execute(conn)
 }
 
-pub fn delete(id: i32 conn: &SqliteConnection) -> QueryResult<usize> {
+pub fn delete(id: i32, conn: &SqliteConnection) -> QueryResult<usize> {
     diesel::delete(contracts::table.find(id))
         .execute(conn)
 }

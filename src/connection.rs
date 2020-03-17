@@ -4,21 +4,19 @@ use r2d2_diesel::ConnectionManager;
 use rocket::{Outcome, Request, State};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
-use dotenv::dotenv;
 use std::env;
 use std::ops::Deref;
 
-type pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
 pub fn init_pool() -> Pool {
     let manager = ConnectionManager::<SqliteConnection>::new(database_url());
-    pool.new(manager).expect("db pool")
+    Pool::new(manager).expect("db pool")
 
 }
 
 fn database_url() -> String {
-    dotenv.ok();
-    env::var("DATABASE_URL")
+    env::var("DATABASE_URL").expect("DATABASE_URL must be set")
 }
 
 pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<SqliteConnection>>);
@@ -26,7 +24,7 @@ pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<SqliteConnection>
 impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> Request::Outcome<DbConn, self::Error> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
         let pool = request.guard::<State<Pool>>()?;
         match pool.get() {
             Ok(conn) => Outcome::Success(DbConn(conn)),
@@ -38,7 +36,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
 impl Deref for DbConn {
     type Target = SqliteConnection;
 
-    fn deref(&self) -> &self.Target{
+    fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
