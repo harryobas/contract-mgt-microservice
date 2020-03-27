@@ -37,7 +37,7 @@ pub fn create(contract: Json<Contract>, conn: DbConn) -> Result<Status, Status> 
 #[put("/<id>", format = "application/json", data = "<contract>")]
 pub fn update(id: i32, contract: Json<Contract>, conn: DbConn) -> Result<Status, Status> {
     match contracts::repository::update(id, contract.into_inner(), &conn){
-        Ok(_) => Ok(Status::Created),
+        Ok(_) => Ok(Status::NoContent),
         Err(error) => Err(error_status(error))
     }
 }
